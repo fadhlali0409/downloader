@@ -133,33 +133,30 @@ def analyze():
     data = request.get_json()
     url = data.get('url')
     
+    @app.route('/analyze', methods=['POST'])
+def analyze():
+    data = request.get_json()
+    url = data.get('url')
+    
     ydl_opts = {
         'format': 'best',
         'quiet': True,
         'no_warnings': True,
+        'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
     }
     
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
+            video_url = info.get('url') or (info['formats'][-1]['url'] if 'formats' in info else None)
             
-            formats = []
-            if info.get('url'):
-                formats.append({
-                    'quality': 'Best Quality (فيديو وصوت)',
-                    'url': info.get('url')
-                })
-                
             return jsonify({
                 'success': True,
                 'title': info.get('title', 'فيديو بدون عنوان'),
                 'thumbnail': info.get('thumbnail', ''),
                 'extractor': info.get('extractor_key', 'موقع عام'),
-                'formats': formats
+                'formats': [{'quality': 'تحميل مباشر', 'url': video_url}]
             })
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
-  
+        
